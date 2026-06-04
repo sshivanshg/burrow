@@ -1,6 +1,6 @@
 {
   "name": "burrowed",
-  "version": "0.2.5",
+  "version": "0.3.0",
   "description": "Dig out junk and reclaim disk space — a Mole-inspired Mac cleaner with terminal animations.",
   "type": "module",
   "license": "MIT",
