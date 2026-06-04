@@ -34,7 +34,9 @@ import { buildScans, recommend } from "./core/recommendations.ts";
 import { renderCards } from "./ui/cards.ts";
 import dormantApps from "./cleaners/dormant-apps.ts";
 import { computeScore, readCachedScore, cacheScore } from "./core/score.ts";
-import { renderScoreCard, inlineBadge, nudge } from "./views/score.ts";
+import { renderScoreCard, inlineBadge, nudge, renderTrend } from "./views/score.ts";
+import { appendScore } from "./core/score-history.ts";
+import { TopBar } from "./ui/topbar.ts";
 
 const MAIN_MENU: MenuItem[] = [
   { value: "clean", label: "Clean", description: "Free up disk space" },
@@ -142,14 +144,20 @@ async function runOptimizeView() {
 
 async function runScoreView() {
   printHeader();
-  const dg = new Digger();
-  dg.start("Computing burrow score…");
+  const bar = new TopBar();
+  bar.start("Computing burrow score…");
   const score = await computeScore();
   cacheScore(score);
-  dg.stop("Score ready.");
+  appendScore(score);
+  bar.stop("Score ready.");
   console.log();
   renderScoreCard(score);
   console.log();
+  const trend = renderTrend(30);
+  if (trend) {
+    console.log(trend);
+    console.log();
+  }
   console.log("  " + nudge(score));
   await pressAnyKey();
 }
@@ -279,19 +287,22 @@ async function readLine(prompt: string): Promise<string> {
 /**
  * Run a quick, cheap scan of just the auto-scanning cleaners so we can
  * compute recommendation cards. Skipped when stdout isn't a TTY.
+ *
+ * Uses the persistent TopBar so the banner stays visible while the
+ * mole tunnels across the top.
  */
 async function quickScanForRecs() {
   if (!animationsEnabled()) return [] as Awaited<ReturnType<typeof buildScans>>;
   const cheap = cleaners.filter(
     (c) => !["app-leftovers", "large-files", "duplicates", "dormant-apps"].includes(c.meta.id),
   );
-  const dg = new Digger();
-  dg.start("Sniffing around for quick wins…");
+  const bar = new TopBar();
+  bar.start("Sniffing around for quick wins…");
   const rows: Array<{ id: string; title: string; findings: Finding[] }> = [];
   for (let i = 0; i < cheap.length; i++) {
     const c = cheap[i];
-    dg.setProgress((i + 1) / cheap.length);
-    dg.setMessage(`Sampling ${c.meta.title}…`);
+    bar.setProgress((i + 1) / cheap.length);
+    bar.setMessage(`Sampling ${c.meta.title}…`);
     try {
       const ok = await Promise.resolve(c.meta.available?.() ?? true);
       if (!ok) continue;
@@ -301,7 +312,7 @@ async function quickScanForRecs() {
       // ignore
     }
   }
-  dg.stop("Done sniffing.");
+  bar.stop(`Done sniffing · ${rows.length} categor${rows.length === 1 ? "y" : "ies"} with reclaimable space.`);
   return buildScans(rows);
 }
 
@@ -324,6 +335,7 @@ export async function runDashboard() {
           dormantCount: dormantList.length,
         });
         cacheScore(fresh);
+        appendScore(fresh);
       } catch {
         // ignore — badge falls back to cached or hidden
       }

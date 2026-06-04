@@ -268,9 +268,11 @@ export async function main(argv: string[]) {
 
   if (flags.command === "score") {
     const { computeScore, cacheScore } = await import("./core/score.ts");
-    const { renderScoreCard, nudge } = await import("./views/score.ts");
+    const { renderScoreCard, renderTrend, nudge } = await import("./views/score.ts");
+    const { appendScore } = await import("./core/score-history.ts");
     const score = await computeScore();
     cacheScore(score);
+    appendScore(score);
     if (flags.json) {
       console.log(JSON.stringify(score, null, 2));
       return;
@@ -278,6 +280,11 @@ export async function main(argv: string[]) {
     console.log();
     renderScoreCard(score);
     console.log();
+    const trend = renderTrend(30);
+    if (trend) {
+      console.log(trend);
+      console.log();
+    }
     console.log("  " + nudge(score));
     console.log();
     return;

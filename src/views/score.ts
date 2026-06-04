@@ -19,6 +19,7 @@
 import { rgb, palette, dim, brand, freed as freedColor } from "../ui/theme.ts";
 import { termWidth } from "../ui/tty.ts";
 import type { HealthScore, ScoreComponent } from "../core/score.ts";
+import { recentEntries, summarise, type Trend } from "../core/score-history.ts";
 
 function stripAnsi(s: string): string {
   return s.replace(/\x1b\[[0-9;]*m/g, "");
@@ -77,6 +78,30 @@ export function renderScoreCard(score: HealthScore) {
 export function inlineBadge(score: HealthScore): string {
   const color = gradeColor(score.grade);
   return rgb(color, `${score.total} ${score.grade}`) + dim(`/100`);
+}
+
+/**
+ * One-line trend strip rendered under the score card. Looks like:
+ *
+ *   30d trend  ▃▃▅▆▇█  22 → 58   ↗ +36
+ *
+ * Returns empty string when there's no history (just printed first card).
+ */
+export function renderTrend(windowDays = 30): string {
+  const entries = recentEntries({ windowDays, n: 40 });
+  if (entries.length < 2) {
+    if (entries.length === 1) {
+      return dim(`  Trend  ${entries[0].total} · keep using burrow to build a trend.`);
+    }
+    return "";
+  }
+  const t = summarise(entries);
+  const first = entries[0].total;
+  const last = entries[entries.length - 1].total;
+  const deltaStr = t.delta === 0 ? "no change" : (t.delta > 0 ? `+${t.delta}` : `${t.delta}`);
+  const arrowColor = t.delta > 0 ? palette.moss : t.delta < 0 ? palette.danger : palette.shadow;
+  const sparkColor = palette.spark;
+  return `  ${dim(`${windowDays}d trend`)}  ${rgb(sparkColor, t.sparkline)}  ${first} → ${last}   ${rgb(arrowColor, t.arrow + " " + deltaStr)}`;
 }
 
 /** Quick textual one-liner with suggestion. */
