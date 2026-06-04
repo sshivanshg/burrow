@@ -10,7 +10,7 @@
 class Burrowed < Formula
   desc "Dig out junk and reclaim disk space — Mac cleaner with terminal animations"
   homepage "https://github.com/sshivanshg/burrowed"
-  version "0.3.0"
+  version "0.3.1"
   license "MIT"
 
   on_macos do
