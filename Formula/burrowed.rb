@@ -16,10 +16,10 @@ class Burrowed < Formula
   on_macos do
     if Hardware::CPU.arm?
       url "https://github.com/sshivanshg/burrowed/releases/download/v#{version}/burrowed-darwin-arm64"
-      sha256 "16c959babc094228b678859c39277fef9f2642e60dc59cebd9c65404de2ede8e"
+      sha256 "ee5696d0d0eeea45a857b4e50541d4ad1f0ad1eee5390b7ea3b7edaf47b87c25"
     else
       url "https://github.com/sshivanshg/burrowed/releases/download/v#{version}/burrowed-darwin-x64"
-      sha256 "4a4409f78716e0693a59d2d1136387254f84ac60bf767bee826165ce9bcb1397"
+      sha256 "7a8cbbb4f962217a19a70ba12ea7c4ef912c6f84fad281cf2e5a5d9c905f39e6"
     end
   end
 
