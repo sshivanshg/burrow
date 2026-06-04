@@ -1,12 +1,42 @@
 {
   "name": "burrow",
   "version": "0.1.0",
-  "description": "🐹 Dig out dev junk and reclaim disk space — a tiny Mole-inspired cleaner",
+  "description": "Dig out junk and reclaim disk space — a Mole-inspired Mac cleaner with terminal animations.",
   "type": "module",
+  "license": "MIT",
+  "author": "Shivansh Gupta (https://github.com/sshivanshg)",
+  "homepage": "https://github.com/sshivanshg/burrow",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sshivanshg/burrow.git"
+  },
+  "bugs": "https://github.com/sshivanshg/burrow/issues",
+  "keywords": [
+    "macos",
+    "cleaner",
+    "cli",
+    "tui",
+    "disk-space",
+    "node_modules",
+    "xcode",
+    "homebrew",
+    "duplicates",
+    "developer-tools",
+    "bun"
+  ],
   "bin": { "burrow": "./index.ts" },
+  "files": [
+    "index.ts",
+    "src/",
+    "LICENSE",
+    "README.md"
+  ],
   "scripts": {
     "start": "bun run index.ts",
-    "compile": "bun build --compile --minify --outfile burrow index.ts"
+    "test": "bun test",
+    "build": "bun run scripts/build.ts",
+    "build:current": "bun build --compile --minify --outfile burrow index.ts",
+    "demo": "bun run tests/ui.demo.ts"
   },
   "dependencies": {
     "@clack/prompts": "^0.7.0",

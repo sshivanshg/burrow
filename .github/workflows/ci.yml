@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - run: bun test
+      - name: Smoke-test --help
+        run: bun run index.ts --help
+      - name: Smoke-test doctor
+        run: bun run index.ts doctor
+      - name: Smoke-test scan --list
+        run: bun run index.ts scan . -l
+      - name: Smoke-test animation demo (no-tty)
+        run: BURROW_NO_ANIMATION=1 bun run tests/ui.demo.ts
