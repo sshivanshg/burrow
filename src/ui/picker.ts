@@ -11,6 +11,8 @@ import { human } from "../core/size.ts";
 import { animateBytes, particleBurst } from "./animations.ts";
 import { Digger } from "./digger.ts";
 import { brand, freed as freedColor, sky, dim } from "./theme.ts";
+import { quarantineBatch } from "../core/quarantine.ts";
+import { record as recordHistory } from "../core/history.ts";
 
 interface RunOpts {
   cleaner: Cleaner;
@@ -19,6 +21,8 @@ interface RunOpts {
   json: boolean;
   list: boolean;
   yes: boolean;
+  /** Move to ~/.burrow-quarantine instead of rm. */
+  quarantine?: boolean;
   /** Used to render relative paths nicely. */
   displayRoot?: string;
 }
@@ -101,26 +105,60 @@ export async function runCleaner(opts: RunOpts) {
   }
 
   const del = new Digger();
-  del.start("Filling in the burrow…");
-  const cleanOpts: CleanOpts & ScanOpts = {
-    ...scanOpts,
-    dryRun: false,
-    onProgress: (n, t, freed) => del.setMessage(`Removed ${n}/${t} — ${human(freed)} freed`),
-  };
-  const result = await cleaner.clean(selected, cleanOpts);
-  del.stop(`Removed ${result.removed} item(s).`);
+  const startedAt = Date.now();
+  let removed = 0;
+  let freed = 0;
+  let failed = 0;
+
+  if (opts.quarantine) {
+    del.start("Quarantining (move to ~/.burrow-quarantine)…");
+    // Filter again through the cleaner's own safety check, just in case.
+    const safe = selected.filter((f) => cleaner.isSafeToDelete(f.path, scanOpts));
+    const batch = quarantineBatch(
+      cleaner.meta.id,
+      safe.map((f) => ({ path: f.path, size: f.size })),
+    );
+    removed = batch.items.length;
+    freed = batch.totalSize;
+    failed = selected.length - removed;
+    del.stop(`Quarantined ${removed} item(s) — batch ${batch.id.split("_")[0]}.`);
+    console.log(dim(`  Restore with: burrow restore ${batch.id}`));
+  } else {
+    del.start("Filling in the burrow…");
+    const cleanOpts: CleanOpts & ScanOpts = {
+      ...scanOpts,
+      dryRun: false,
+      onProgress: (n, t, f) => del.setMessage(`Removed ${n}/${t} — ${human(f)} freed`),
+    };
+    const result = await cleaner.clean(selected, cleanOpts);
+    del.stop(`Removed ${result.removed} item(s).`);
+    removed = result.removed;
+    freed = result.freed;
+    failed = result.failed;
+  }
 
   await animateBytes({
-    to: result.freed,
+    to: freed,
     ms: 700,
     render: (_, str) => process.stdout.write("\r  " + freedColor(`Reclaimed ${str}`) + "        "),
   });
   process.stdout.write("\n");
-  if (result.freed > 1024 * 1024) {
+  if (freed > 1024 * 1024) {
     await particleBurst({ width: Math.min(60, process.stdout.columns ?? 60), height: 3, count: 24, ms: 500 });
   }
 
-  return { ran: true, removed: result.removed, freed: result.freed, failed: result.failed };
+  recordHistory({
+    ts: new Date().toISOString(),
+    category: cleaner.meta.id,
+    removed,
+    failed,
+    freed,
+    dryRun: false,
+    quarantined: !!opts.quarantine,
+    durationMs: Date.now() - startedAt,
+  });
+
+  return { ran: true, removed, freed, failed };
 }
 
 function renderList(findings: Finding[], root: string) {

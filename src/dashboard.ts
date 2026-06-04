@@ -25,12 +25,18 @@ import { ensurePermissions } from "./ui/onboarding.ts";
 import appLeftovers from "./cleaners/app-leftovers.ts";
 import largeFiles from "./cleaners/large-files.ts";
 import duplicates from "./cleaners/duplicates.ts";
+import { renderStats, renderHistory } from "./views/stats.ts";
+import { listQuarantine, restoreById, purgeAll } from "./views/quarantine.ts";
+import { status as scheduleStatus, install as installSchedule, uninstall as uninstallSchedule, type Cadence } from "./core/schedule.ts";
 
 const MAIN_MENU: MenuItem[] = [
   { value: "clean", label: "Clean", description: "Free up disk space" },
   { value: "uninstall", label: "Uninstall", description: "Remove apps completely" },
   { value: "analyze", label: "Analyze", description: "Explore disk usage" },
   { value: "status", label: "Status", description: "Monitor system health" },
+  { value: "stats", label: "Stats", description: "Lifetime reclaimed + history" },
+  { value: "quarantine", label: "Quarantine", description: "Soft-deleted items · restore / purge" },
+  { value: "schedule", label: "Schedule", description: "Automate cleanups via launchd" },
   { value: "doctor", label: "Doctor", description: "Check available cleaners" },
 ];
 
@@ -234,6 +240,82 @@ export async function runDashboard() {
     else if (choice === "uninstall") await runUninstall();
     else if (choice === "analyze") await runAnalyze();
     else if (choice === "status") await runStatus();
+    else if (choice === "stats") await runStats();
+    else if (choice === "quarantine") await runQuarantine();
+    else if (choice === "schedule") await runSchedule();
     else if (choice === "doctor") await runDoctor();
   }
+}
+
+async function runStats() {
+  printHeader();
+  renderStats();
+  console.log(dim("  ── Recent cleans ──"));
+  console.log();
+  renderHistory(10);
+  await pressAnyKey();
+}
+
+async function runQuarantine() {
+  printHeader();
+  console.log(dim("  Quarantine — soft-deleted items.\n"));
+  const batches = listQuarantine();
+  if (batches.length === 0) {
+    await pressAnyKey();
+    return;
+  }
+  const action = await showMenu({
+    items: [
+      { value: "restore-pick", label: "Restore one", description: "Pick a batch to bring back" },
+      { value: "purge-old", label: "Purge old", description: "Remove batches older than 14 days" },
+      { value: "purge-all", label: "Purge all", description: "Permanently empty quarantine" },
+      { value: "back", label: "Back", description: "Return to main menu" },
+    ],
+  });
+  if (!action || action === "back") return;
+  if (action === "restore-pick") {
+    const items = batches.slice(0, 9).map((b) => ({
+      value: b.id,
+      label: b.id.split("_")[0].slice(0, 19),
+      description: `${b.category} · ${b.items.length} item(s)`,
+    }));
+    items.push({ value: "back", label: "Back", description: "" });
+    const pick = await showMenu({ items });
+    if (pick && pick !== "back") restoreById(pick);
+  } else if (action === "purge-old") {
+    purgeAll(14);
+  } else if (action === "purge-all") {
+    purgeAll();
+  }
+  await pressAnyKey();
+}
+
+async function runSchedule() {
+  printHeader();
+  const s = scheduleStatus();
+  console.log(dim("  Schedule — automate burrow via launchd.\n"));
+  console.log(`  Status: ${s.installed ? rgb(palette.moss, "installed") : dim("not installed")}`);
+  if (s.installed) console.log(dim(`  plist:  ${s.plistPath}`));
+  console.log();
+  const items: MenuItem[] = [
+    { value: "daily", label: "Daily", description: "Run every day at 03:00 (dev-junk, system-caches, homebrew, logs)" },
+    { value: "weekly", label: "Weekly", description: "Run Sundays at 03:00 (same defaults)" },
+    { value: "monthly", label: "Monthly", description: "Run on the 1st at 03:00 (same defaults)" },
+    ...(s.installed ? [{ value: "uninstall", label: "Remove", description: "Disable the scheduled job" }] : []),
+    { value: "back", label: "Back", description: "Return to main menu" },
+  ];
+  const pick = await showMenu({ items });
+  if (!pick || pick === "back") return;
+  if (pick === "uninstall") {
+    const r = uninstallSchedule();
+    console.log(r.removed ? rgb(palette.moss, "  ✓ schedule removed.") : dim("  no schedule installed."));
+  } else {
+    const r = installSchedule(pick as Cadence, ["dev-junk", "system-caches", "homebrew", "logs"]);
+    console.log(
+      r.loaded
+        ? rgb(palette.moss, `  ✓ scheduled ${pick}. Runs in the background at 03:00.`)
+        : dim(`  ⚠ plist written but launchctl reported a problem: ${r.plistPath}`),
+    );
+  }
+  await pressAnyKey();
 }

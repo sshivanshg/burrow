@@ -5,7 +5,7 @@
  * ambiguous ones (dist, build, target, venv) unchecked.
  */
 import { basename } from "node:path";
-import { rmSync } from "node:fs";
+import { rmSync, statSync } from "node:fs";
 import { walkDirs } from "../core/scan.ts";
 import { sizesOf } from "../core/size.ts";
 import { passesCommonGuards } from "../core/safety.ts";
@@ -59,20 +59,45 @@ export async function scan(opts: ScanOpts): Promise<Finding[]> {
   });
   const sizes = sizesOf(paths);
   const minBytes = (opts.minMB ?? 0) * 1024 * 1024;
+  const now = Date.now();
   return paths
     .map((p) => {
       const name = basename(p);
       const spec = JUNK[name];
+      let ageDays = 0;
+      try {
+        const st = statSync(p);
+        ageDays = Math.floor((now - st.mtimeMs) / 86400_000);
+      } catch {
+        // ignore
+      }
+      const sizeBytes = sizes.get(p) ?? 0;
+      const desc = ageDays > 7
+        ? `${spec.description} · ${ageDays}d unused`
+        : spec.description;
       return {
         path: p,
-        size: sizes.get(p) ?? 0,
+        size: sizeBytes,
         category: meta.id,
         label: name,
-        description: spec.description,
-        safe: spec.safe,
+        description: desc,
+        // pre-check items that are both known-safe AND not freshly touched
+        safe: spec.safe && ageDays >= 7,
       } satisfies Finding;
     })
-    .filter((f) => f.size >= minBytes);
+    .filter((f) => f.size >= minBytes)
+    // Sort by "staleness × size": untouched + big things float to the top.
+    .sort((a, b) => {
+      const aAge = ageFromDesc(a.description);
+      const bAge = ageFromDesc(b.description);
+      return (b.size * Math.max(1, bAge)) - (a.size * Math.max(1, aAge));
+    });
+}
+
+function ageFromDesc(desc?: string): number {
+  if (!desc) return 1;
+  const m = desc.match(/(\d+)d unused/);
+  return m ? Number(m[1]) : 1;
 }
 
 export function isSafeToDelete(path: string, opts: ScanOpts): boolean {
