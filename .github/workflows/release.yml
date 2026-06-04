@@ -12,6 +12,10 @@ jobs:
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Need full history + permission to push the formula update back to main.
+          fetch-depth: 0
+          persist-credentials: true
       - uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
@@ -36,3 +40,26 @@ jobs:
             dist/burrow-darwin-arm64
             dist/burrow-darwin-x64
             dist/SHA256SUMS
+
+      - name: Auto-update Homebrew formula on main
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          VERSION="${TAG#v}"
+          # Switch to main without losing the dist/ artifacts.
+          git fetch origin main
+          git checkout -B main origin/main
+          bun scripts/update-formula.ts dist/SHA256SUMS Formula/burrow.rb "$VERSION"
+
+          # Bail if the formula didn't change (e.g., rebuilt with identical SHAs).
+          if git diff --quiet Formula/burrow.rb; then
+            echo "Formula unchanged; nothing to commit."
+            exit 0
+          fi
+
+          git config user.name  "burrow-release-bot"
+          git config user.email "burrow-release-bot@users.noreply.github.com"
+          git add Formula/burrow.rb
+          git commit -m "chore(release): auto-update Homebrew formula for ${TAG}"
+          git push origin main

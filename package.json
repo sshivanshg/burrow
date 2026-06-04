@@ -36,7 +36,8 @@
     "test": "bun test",
     "build": "bun run scripts/build.ts",
     "build:current": "bun build --compile --minify --outfile burrow index.ts",
-    "demo": "bun run tests/ui.demo.ts"
+    "demo": "bun run tests/ui.demo.ts",
+    "release": "bun run scripts/release.ts"
   },
   "dependencies": {
     "@clack/prompts": "^0.7.0",

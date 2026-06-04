@@ -14,18 +14,31 @@ way.
 
 ## Install
 
-**Homebrew** (recommended)
+**One-line installer** (no Homebrew needed)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/sshivanshg/burrow/main/install.sh | bash
+```
+
+Detects your CPU (arm64 / x64), downloads the right binary from the
+latest release, verifies the SHA256, drops it in `~/.local/bin/burrow`.
+**To update later:** re-run the same command.
+
+**Homebrew**
+
+> Note: there's an unrelated `burrow` in homebrew-core (Cloudflare's
+> tunnel client). Install ours with the **full tap path** so brew picks
+> the right one:
 
 ```bash
 brew tap sshivanshg/burrow https://github.com/sshivanshg/burrow
-brew install burrow
+brew install sshivanshg/burrow/burrow
 ```
 
-**Direct binary** (no Homebrew)
+**To update later:**
 
 ```bash
-curl -L https://github.com/sshivanshg/burrow/releases/latest/download/burrow-darwin-arm64 -o /usr/local/bin/burrow
-chmod +x /usr/local/bin/burrow
+brew update && brew upgrade sshivanshg/burrow/burrow
 ```
 
 **From source** (needs [Bun](https://bun.sh))
@@ -33,8 +46,15 @@ chmod +x /usr/local/bin/burrow
 ```bash
 git clone https://github.com/sshivanshg/burrow
 cd burrow && bun install
-bun run index.ts                     # try it
-bun run build:current                # produce ./burrow binary
+bun run index.ts                     # run from source
+bun run build:current                # build a local single-file binary
+```
+
+### Verify install
+
+```bash
+burrow --help | head -3
+# expects: 🐹 burrow — dig out junk and reclaim disk space
 ```
 
 ## Use
@@ -104,6 +124,41 @@ Environment:
 - `BURROW_NO_ANIMATION=1` — same as `--no-animation`
 - `NO_COLOR=1` — disables ANSI color
 - `CI=true` — disables animations automatically
+
+## Release flow (maintainers)
+
+One command cuts a release. Everything after that is automated.
+
+```bash
+bun run release patch        # 0.2.0 → 0.2.1
+bun run release minor        # 0.2.0 → 0.3.0
+bun run release major        # 0.2.0 → 1.0.0
+```
+
+What `bun run release` does locally:
+
+1. Verifies a clean working tree on `main`, pulls --rebase.
+2. Bumps `package.json` + `Formula/burrow.rb` to the next version.
+3. Commits `Release vX.Y.Z`.
+4. Tags `vX.Y.Z`.
+5. Pushes main + tag.
+
+What GitHub Actions does on the tag push (`.github/workflows/release.yml`):
+
+1. Runs the test suite.
+2. Builds `burrow-darwin-arm64` + `burrow-darwin-x64` binaries.
+3. Generates `SHA256SUMS`.
+4. Publishes a GitHub release with the binaries + checksums attached.
+5. Runs `scripts/update-formula.ts` to patch `Formula/burrow.rb` with
+   the real SHAs of the just-built binaries.
+6. Commits + pushes the Formula update back to `main`.
+
+End-user upgrade paths after a release lands:
+
+- `curl … install.sh` users: re-run the same one-liner.
+- `brew` users: `brew update && brew upgrade sshivanshg/burrow/burrow`.
+
+No manual SHA-juggling, no formula-tap-repo bookkeeping.
 
 ## Develop
 
