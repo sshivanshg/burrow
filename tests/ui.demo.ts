@@ -18,7 +18,7 @@ import {
 import { brand, freed, dim } from "../src/ui/theme.ts";
 
 console.clear();
-await reveal("🐹 burrow — animation demo");
+await reveal("🐹 burrowed — animation demo");
 console.log();
 
 const m = moleSpinner();

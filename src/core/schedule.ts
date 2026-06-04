@@ -1,5 +1,5 @@
 /**
- * Schedule burrow cleanups via macOS launchd. We write a LaunchAgent
+ * Schedule burrowed cleanups via macOS launchd. We write a LaunchAgent
  * plist to ~/Library/LaunchAgents and `launchctl load -w` it.
  *
  * Cadences:
@@ -9,7 +9,7 @@
  *
  * The agent runs the current burrow binary (or `bun run index.ts` from
  * the source dir if no binary is on PATH). Output goes to
- * ~/Library/Logs/burrow-schedule.log so the user can verify it ran.
+ * ~/Library/Logs/burrowed-schedule.log so the user can verify it ran.
  */
 import { existsSync, writeFileSync, rmSync, readlinkSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -31,14 +31,14 @@ function calendarFor(c: Cadence): CalendarSpec {
   return { Hour: 3, Minute: 0, Day: 1 };
 }
 
-/** Find the burrow binary to schedule against, falling back to source. */
-function findBurrowBin(): { argv: string[]; cwd?: string } {
+/** Find the burrowed binary to schedule against, falling back to source. */
+function findBurrowedBin(): { argv: string[]; cwd?: string } {
   // 1) installed binary on PATH (e.g. via Homebrew)
-  const which = Bun.spawnSync(["which", "burrow"]).stdout.toString().trim();
+  const which = Bun.spawnSync(["which", "burrowed"]).stdout.toString().trim();
   if (which) return { argv: [which] };
   // 2) compiled binary in the repo
   const here = resolve(import.meta.dirname, "..", "..");
-  const local = join(here, "burrow");
+  const local = join(here, "burrowed");
   if (existsSync(local)) return { argv: [local] };
   // 3) bun + index.ts (source mode)
   const bun = Bun.spawnSync(["which", "bun"]).stdout.toString().trim() || "/opt/homebrew/bin/bun";
@@ -50,7 +50,7 @@ function plistEscape(s: string): string {
 }
 
 function renderPlist(cadence: Cadence, categories: string[]): string {
-  const bin = findBurrowBin();
+  const bin = findBurrowedBin();
   const args = ["clean", ...categories, "-y", "--quarantine", "--no-animation"];
   const cal = calendarFor(cadence);
   const argv = [...bin.argv, ...args].map(plistEscape);
@@ -62,7 +62,7 @@ function renderPlist(cadence: Cadence, categories: string[]): string {
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
   <dict>
-    <key>Label</key><string>com.sshivanshg.burrow</string>
+    <key>Label</key><string>com.sshivanshg.burrowed</string>
     <key>ProgramArguments</key>
     <array>
 ${argv.map((a) => `      <string>${a}</string>`).join("\n")}
@@ -71,8 +71,8 @@ ${argv.map((a) => `      <string>${a}</string>`).join("\n")}
     <dict>
 ${calKeys}
     </dict>
-    <key>StandardOutPath</key><string>${plistEscape(join(logDir, "burrow-schedule.log"))}</string>
-    <key>StandardErrorPath</key><string>${plistEscape(join(logDir, "burrow-schedule.log"))}</string>
+    <key>StandardOutPath</key><string>${plistEscape(join(logDir, "burrowed-schedule.log"))}</string>
+    <key>StandardErrorPath</key><string>${plistEscape(join(logDir, "burrowed-schedule.log"))}</string>
     <key>RunAtLoad</key><false/>
   </dict>
 </plist>

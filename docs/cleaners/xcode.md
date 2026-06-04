@@ -17,7 +17,7 @@ Cleans Xcode's notorious storage hogs.
 ## CLI
 
 ```bash
-burrow clean xcode
+burrowed clean xcode
 ```
 
 ## Safety
@@ -27,5 +27,5 @@ burrow clean xcode
 
 ## Available?
 
-`burrow doctor` skips xcode when neither `~/Library/Developer/Xcode`
+`burrowed doctor` skips xcode when neither `~/Library/Developer/Xcode`
 nor `~/Library/Developer/CoreSimulator` exists.

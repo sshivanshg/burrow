@@ -1,16 +1,16 @@
 {
-  "name": "burrow",
+  "name": "burrowed",
   "version": "0.2.5",
   "description": "Dig out junk and reclaim disk space — a Mole-inspired Mac cleaner with terminal animations.",
   "type": "module",
   "license": "MIT",
   "author": "Shivansh Gupta (https://github.com/sshivanshg)",
-  "homepage": "https://github.com/sshivanshg/burrow",
+  "homepage": "https://github.com/sshivanshg/burrowed",
   "repository": {
     "type": "git",
-    "url": "https://github.com/sshivanshg/burrow.git"
+    "url": "https://github.com/sshivanshg/burrowed.git"
   },
-  "bugs": "https://github.com/sshivanshg/burrow/issues",
+  "bugs": "https://github.com/sshivanshg/burrowed/issues",
   "keywords": [
     "macos",
     "cleaner",
@@ -25,7 +25,7 @@
     "bun"
   ],
   "bin": {
-    "burrow": "./index.ts"
+    "burrowed": "./index.ts"
   },
   "files": [
     "index.ts",
@@ -37,7 +37,7 @@
     "start": "bun run index.ts",
     "test": "bun test",
     "build": "bun run scripts/build.ts",
-    "build:current": "bun build --compile --minify --outfile burrow index.ts",
+    "build:current": "bun build --compile --minify --outfile burrowed index.ts",
     "demo": "bun run tests/ui.demo.ts",
     "release": "bun run scripts/release.ts"
   },

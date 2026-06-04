@@ -9,7 +9,7 @@
  * What it does:
  *   1. Verifies working tree is clean and we're on `main`.
  *   2. Pulls --rebase so we're up to date with origin/main.
- *   3. Bumps version in package.json + Formula/burrow.rb.
+ *   3. Bumps version in package.json + Formula/burrowed.rb.
  *   4. Commits 'Release vX.Y.Z'.
  *   5. Tags vX.Y.Z (annotated).
  *   6. Pushes main + tag.
@@ -87,17 +87,17 @@ function patchInPlace(file: string, pattern: RegExp, replacement: string, errLab
   writeFileSync(file, after);
 }
 
-patchInPlace("Formula/burrow.rb", /version "[^"]+"/, `version "${next}"`, "version");
-patchInPlace("src/cli.ts", /BURROW_VERSION = "[^"]+"/, `BURROW_VERSION = "${next}"`, "BURROW_VERSION");
+patchInPlace("Formula/burrowed.rb", /version "[^"]+"/, `version "${next}"`, "version");
+patchInPlace("src/cli.ts", /BURROWED_VERSION = "[^"]+"/, `BURROWED_VERSION = "${next}"`, "BURROWED_VERSION");
 
 if (dryRun) {
   console.log("─ dry run — not committing, tagging, or pushing ─");
-  console.log("revert with: git checkout package.json Formula/burrow.rb");
+  console.log("revert with: git checkout package.json Formula/burrowed.rb");
   process.exit(0);
 }
 
 // 5. Commit
-run(["git", "add", "package.json", "Formula/burrow.rb", "src/cli.ts"]);
+run(["git", "add", "package.json", "Formula/burrowed.rb", "src/cli.ts"]);
 run(["git", "commit", "-m", `Release v${next}`], { inherit: true });
 
 // 6. Tag
@@ -114,7 +114,7 @@ console.log(`✓ released v${next}`);
 console.log(`  CI will:`);
 console.log(`    • build darwin-arm64 + darwin-x64 binaries`);
 console.log(`    • attach them to https://github.com/sshivanshg/burrow/releases/tag/v${next}`);
-console.log(`    • auto-update Formula/burrow.rb sha256s`);
+console.log(`    • auto-update Formula/burrowed.rb sha256s`);
 console.log(`    • commit the Formula update back to main`);
 console.log();
 console.log(`  Users on brew run: brew update && brew upgrade sshivanshg/burrow/burrow`);

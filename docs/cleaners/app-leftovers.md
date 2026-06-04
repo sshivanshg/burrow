@@ -7,10 +7,10 @@ behind. This cleaner hunts for them.
 ## CLI
 
 ```bash
-burrow uninstall Slack            # by display name
-burrow uninstall com.tinyspeck.slackmacgap   # by bundle id
-burrow uninstall figma -l         # list only
-burrow uninstall figma -y         # delete anything found without confirm
+burrowed uninstall Slack            # by display name
+burrowed uninstall com.tinyspeck.slackmacgap   # by bundle id
+burrowed uninstall figma -l         # list only
+burrowed uninstall figma -y         # delete anything found without confirm
 ```
 
 ## Where it looks

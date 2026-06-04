@@ -3,19 +3,19 @@
  * burrow CLI entry. Routes subcommands to handlers.
  *
  *   burrow                          interactive dashboard
- *   burrow scan [path]              scan dev-junk under `path` (default cwd)
- *   burrow clean <category> [path]  pick + clean by category
- *   burrow uninstall <app>          hunt leftovers for a removed app
- *   burrow dashboard                same as `burrow` with no args
- *   burrow doctor                   sanity-check guardrails + tool availability
- *   burrow stats                    lifetime reclaimed stats + sparkline
- *   burrow history                  last 20 cleans
- *   burrow restore [id|--all]       restore quarantined items
- *   burrow purge-quarantine [--older-than 14]
- *   burrow watch [--threshold 85] [--interval 60]
- *   burrow schedule <daily|weekly|monthly> [--categories dev-junk,system-caches]
- *   burrow unschedule
- *   burrow --help
+ *   burrowed scan [path]              scan dev-junk under `path` (default cwd)
+ *   burrowed clean <category> [path]  pick + clean by category
+ *   burrowed uninstall <app>          hunt leftovers for a removed app
+ *   burrowed dashboard                same as `burrow` with no args
+ *   burrowed doctor                   sanity-check guardrails + tool availability
+ *   burrowed stats                    lifetime reclaimed stats + sparkline
+ *   burrowed history                  last 20 cleans
+ *   burrowed restore [id|--all]       restore quarantined items
+ *   burrowed purge-quarantine [--older-than 14]
+ *   burrowed watch [--threshold 85] [--interval 60]
+ *   burrowed schedule <daily|weekly|monthly> [--categories dev-junk,system-caches]
+ *   burrowed unschedule
+ *   burrowed --help
  */
 import pc from "picocolors";
 import { intro, outro } from "@clack/prompts";
@@ -36,7 +36,7 @@ import { watch as runWatch } from "./core/watch.ts";
 import { install as installSchedule, uninstall as uninstallSchedule, status as scheduleStatus, type Cadence } from "./core/schedule.ts";
 
 /** Burned in at build time. Bump via `bun run release patch|minor|major`. */
-export const BURROW_VERSION = "0.2.5";
+export const BURROWED_VERSION = "0.2.5";
 
 interface Flags {
   command: string;
@@ -112,25 +112,25 @@ export function parseArgs(argv: string[]): Flags {
 
 export function printHelp() {
   console.log(`
-${brand("🐹 burrow")} ${pc.dim("— dig out junk and reclaim disk space")}
+${brand("🐹 burrowed")} ${pc.dim("— dig out junk and reclaim disk space")}
 
 ${pc.bold("USAGE")}
-  burrow                          Interactive dashboard
-  burrow scan [path]              Scan dev-junk under [path] (default: cwd)
-  burrow clean <category> [path]  Clean by category (${listIds().join(", ")})
-  burrow uninstall <app>          Hunt leftover files for an uninstalled app
-  burrow dashboard                Same as \`burrow\` with no args
-  burrow doctor                   Sanity-check cleaner availability
+  burrowed                          Interactive dashboard
+  burrowed scan [path]              Scan dev-junk under [path] (default: cwd)
+  burrowed clean <category> [path]  Clean by category (${listIds().join(", ")})
+  burrowed uninstall <app>          Hunt leftover files for an uninstalled app
+  burrowed dashboard                Same as \`burrowed\` with no args
+  burrowed doctor                   Sanity-check cleaner availability
 
-  burrow score                    Composite 0-100 health score
-  burrow stats                    Lifetime reclaimed + sparkline
-  burrow history                  Last 20 cleans
-  burrow restore [id|--all]       Restore quarantined items
-  burrow purge-quarantine [--older-than 14]
+  burrowed score                    Composite 0-100 health score
+  burrowed stats                    Lifetime reclaimed + sparkline
+  burrowed history                  Last 20 cleans
+  burrowed restore [id|--all]       Restore quarantined items
+  burrowed purge-quarantine [--older-than 14]
 
-  burrow watch [--threshold 85] [--interval 60]
-  burrow schedule <daily|weekly|monthly> [--categories a,b,c]
-  burrow unschedule
+  burrowed watch [--threshold 85] [--interval 60]
+  burrowed schedule <daily|weekly|monthly> [--categories a,b,c]
+  burrowed unschedule
 
 ${pc.bold("OPTIONS")}
   -h, --help           Show this help
@@ -138,7 +138,7 @@ ${pc.bold("OPTIONS")}
   -l, --list           Print findings and exit (no prompts)
   -n, --dry-run        Walk the picker but never delete
   -y, --yes            Skip confirmations (only with \`clean <category>\`)
-      --quarantine     Move to ~/.burrow-quarantine instead of \`rm\` (undoable)
+      --quarantine     Move to ~/.burrowed-quarantine instead of \`rm\` (undoable)
       --json           Machine-readable output (disables animations)
       --no-animation   Plain output, no spinners or particles
   -q, --quiet          Minimal output
@@ -151,11 +151,11 @@ ${pc.bold("OPTIONS")}
 
 ${pc.bold("EXAMPLES")}
   burrow                              ${pc.dim("# dashboard")}
-  burrow scan ~/Projects              ${pc.dim("# scan dev-junk under ~/Projects")}
-  burrow clean dev-junk -y --quarantine   ${pc.dim("# undoable bulk clean")}
-  burrow restore 2026-06-04T17-30-12-123Z_dev-junk
-  burrow watch --threshold 90 --interval 300
-  burrow schedule weekly --categories dev-junk,system-caches,homebrew
+  burrowed scan ~/Projects              ${pc.dim("# scan dev-junk under ~/Projects")}
+  burrowed clean dev-junk -y --quarantine   ${pc.dim("# undoable bulk clean")}
+  burrowed restore 2026-06-04T17-30-12-123Z_dev-junk
+  burrowed watch --threshold 90 --interval 300
+  burrowed schedule weekly --categories dev-junk,system-caches,homebrew
 `);
 }
 
@@ -178,10 +178,10 @@ export async function main(argv: string[]) {
     const arch = process.arch;
     const platform = process.platform;
     const runtime = typeof Bun !== "undefined" ? `bun ${Bun.version}` : `node ${process.version}`;
-    console.log(`${brand("burrow")} ${BURROW_VERSION}`);
+    console.log(`${brand("burrowed")} ${BURROWED_VERSION}`);
     console.log(dim(`  runtime  ${runtime}`));
     console.log(dim(`  platform ${platform}-${arch}`));
-    console.log(dim(`  source   https://github.com/sshivanshg/burrow`));
+    console.log(dim(`  source   https://github.com/sshivanshg/burrowed`));
     return;
   }
 
@@ -193,7 +193,7 @@ export async function main(argv: string[]) {
   if (flags.command === "scan") {
     if (!flags.json) {
       console.clear();
-      intro(pc.bgMagenta(pc.black(" 🐹 burrow ")));
+      intro(pc.bgMagenta(pc.black(" 🐹 burrowed ")));
     }
     const root = resolveRoot(flags.positional[0]);
     if (!flags.json) console.log(`  ${dim("Scanning")} ${sky(root)} ${dim(`(depth ${flags.depth})`)}\n`);
@@ -216,7 +216,7 @@ export async function main(argv: string[]) {
   if (flags.command === "clean") {
     const id = flags.positional[0];
     if (!id) {
-      console.error("burrow clean: missing <category>. Try: " + listIds().join(", "));
+      console.error("burrowed clean: missing <category>. Try: " + listIds().join(", "));
       process.exit(2);
     }
     const c = byId(id);
@@ -226,7 +226,7 @@ export async function main(argv: string[]) {
     }
     if (!flags.json) {
       console.clear();
-      intro(pc.bgMagenta(pc.black(` 🐹 burrow · ${c.meta.id} `)));
+      intro(pc.bgMagenta(pc.black(` 🐹 burrowed · ${c.meta.id} `)));
     }
     const root = ["dev-junk", "large-files", "duplicates"].includes(c.meta.id)
       ? resolveRoot(flags.positional[1])
@@ -252,12 +252,12 @@ export async function main(argv: string[]) {
   if (flags.command === "uninstall") {
     const app = flags.positional[0];
     if (!app) {
-      console.error("burrow uninstall: missing <app>. Example: burrow uninstall Slack");
+      console.error("burrowed uninstall: missing <app>. Example: burrowed uninstall Slack");
       process.exit(2);
     }
     if (!flags.json) {
       console.clear();
-      intro(pc.bgMagenta(pc.black(` 🐹 burrow · uninstall ${app} `)));
+      intro(pc.bgMagenta(pc.black(` 🐹 burrowed · uninstall ${app} `)));
     }
     await runCleaner({
       cleaner: appLeftovers,
@@ -272,7 +272,7 @@ export async function main(argv: string[]) {
   }
 
   if (flags.command === "doctor") {
-    await reveal("🩺 burrow doctor");
+    await reveal("🩺 burrowed doctor");
     console.log();
     for (const c of cleaners) {
       const ok = await Promise.resolve(c.meta.available?.() ?? true);
@@ -337,7 +337,7 @@ export async function main(argv: string[]) {
     const id = flags.positional[0];
     if (!id) {
       listQuarantine();
-      console.log(dim("  Usage: burrow restore <id>   or   burrow restore --all"));
+      console.log(dim("  Usage: burrowed restore <id>   or   burrowed restore --all"));
       return;
     }
     restoreById(id);
@@ -357,7 +357,7 @@ export async function main(argv: string[]) {
   if (flags.command === "schedule") {
     const cad = flags.positional[0] as Cadence | undefined;
     if (!cad || !["daily", "weekly", "monthly"].includes(cad)) {
-      console.error("burrow schedule: cadence must be 'daily', 'weekly', or 'monthly'.");
+      console.error("burrowed schedule: cadence must be 'daily', 'weekly', or 'monthly'.");
       process.exit(2);
     }
     const categories = flags.categories
@@ -368,7 +368,7 @@ export async function main(argv: string[]) {
       `  ${r.loaded ? pc.green("✓") : pc.yellow("○")} schedule installed: ${cad}, categories=${categories.join(",")}`,
     );
     console.log(dim(`  plist: ${r.plistPath}`));
-    console.log(dim(`  log:   ~/Library/Logs/burrow-schedule.log`));
+    console.log(dim(`  log:   ~/Library/Logs/burrowed-schedule.log`));
     return;
   }
 

@@ -2,7 +2,7 @@
  * Quarantine — soft-delete instead of rm.
  *
  * Layout:
- *   ~/.burrow-quarantine/
+ *   ~/.burrowed-quarantine/
  *     2026-06-04T17-30-12_dev-junk/
  *       manifest.json            { items: [{ original, stored, size, category }] }
  *       items/

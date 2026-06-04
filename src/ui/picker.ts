@@ -128,7 +128,7 @@ export async function runCleaner(opts: RunOpts) {
   let failed = 0;
 
   if (opts.quarantine) {
-    del.start("Quarantining (move to ~/.burrow-quarantine)…");
+    del.start("Quarantining (move to ~/.burrowed-quarantine)…");
     // Filter again through the cleaner's own safety check, just in case.
     const safe = selected.filter((f) => cleaner.isSafeToDelete(f.path, scanOpts));
     const batch = quarantineBatch(
@@ -139,7 +139,7 @@ export async function runCleaner(opts: RunOpts) {
     freed = batch.totalSize;
     failed = selected.length - removed;
     del.stop(`Quarantined ${removed} item(s) — batch ${batch.id.split("_")[0]}.`);
-    console.log(dim(`  Restore with: burrow restore ${batch.id}`));
+    console.log(dim(`  Restore with: burrowed restore ${batch.id}`));
   } else {
     del.start("Filling in the burrow…");
     const cleanOpts: CleanOpts & ScanOpts = {

@@ -13,16 +13,16 @@ function home(): string {
   return process.env.HOME || homedir();
 }
 
-/** ~/Library/Application Support/burrow — for history, stats, settings. */
+/** ~/Library/Application Support/burrowed — for history, stats, settings. */
 export function appSupportDir(): string {
   const dir = join(home(), "Library", "Application Support", APP_NAME);
   mkdirSync(dir, { recursive: true });
   return dir;
 }
 
-/** ~/.burrow-quarantine — soft-deleted items live here until purged. */
+/** ~/.burrowed-quarantine — soft-deleted items live here until purged. */
 export function quarantineRoot(): string {
-  const dir = join(home(), ".burrow-quarantine");
+  const dir = join(home(), ".burrowed-quarantine");
   mkdirSync(dir, { recursive: true });
   return dir;
 }
@@ -36,5 +36,5 @@ export function stateFile(): string {
 }
 
 export function launchAgentPlist(): string {
-  return join(home(), "Library", "LaunchAgents", "com.sshivanshg.burrow.plist");
+  return join(home(), "Library", "LaunchAgents", "com.sshivanshg.burrowed.plist");
 }

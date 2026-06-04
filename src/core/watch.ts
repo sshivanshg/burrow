@@ -3,7 +3,7 @@
  * crosses a threshold. Designed to be either:
  *
  *   - run in the foreground (Ctrl-C to stop), or
- *   - put under launchd by `burrow schedule` for true background use.
+ *   - put under launchd by `burrowed schedule` for true background use.
  */
 import { diskInfo } from "./disk.ts";
 import { notify } from "./notify.ts";
@@ -20,7 +20,7 @@ export interface WatchOpts {
 export async function watch(opts: WatchOpts) {
   let lastNotifiedDay = "";
   let ticks = 0;
-  console.log(`burrow watch · threshold ${opts.thresholdPercent}% · interval ${opts.intervalSec}s`);
+  console.log(`burrowed watch · threshold ${opts.thresholdPercent}% · interval ${opts.intervalSec}s`);
   while (true) {
     const d = diskInfo();
     if (d) {

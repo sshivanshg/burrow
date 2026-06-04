@@ -1,5 +1,5 @@
 /**
- * `burrow stats` and the Stats screen in the dashboard.
+ * `burrowed stats` and the Stats screen in the dashboard.
  */
 import pc from "picocolors";
 import { aggregate, sparkline, readHistory, type LifetimeStats } from "../core/history.ts";
@@ -10,7 +10,7 @@ export function renderStats(stats: LifetimeStats = aggregate()) {
   console.log(brand("  Lifetime stats"));
   console.log();
   if (stats.totalCleans === 0) {
-    console.log(dim("  No cleans yet. Run `burrow clean <category>` to get started."));
+    console.log(dim("  No cleans yet. Run `burrowed clean <category>` to get started."));
     console.log();
     return;
   }

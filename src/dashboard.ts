@@ -1,5 +1,5 @@
 /**
- * burrow dashboard — the Mole-style top-level menu.
+ * burrowed dashboard — the Mole-style top-level menu.
  *
  * Layout (matches Mole's actual screen):
  *   - compact figlet logo, URL + tagline on the right
@@ -29,7 +29,6 @@ import { renderStats, renderHistory } from "./views/stats.ts";
 import { listQuarantine, restoreById, purgeAll } from "./views/quarantine.ts";
 import { status as scheduleStatus, install as installSchedule, uninstall as uninstallSchedule, type Cadence } from "./core/schedule.ts";
 import { runOptimize } from "./views/optimize.ts";
-import { rgb } from "./ui/theme.ts";
 import { buildScans, recommend } from "./core/recommendations.ts";
 import { renderCards } from "./ui/cards.ts";
 import dormantApps from "./cleaners/dormant-apps.ts";
@@ -145,7 +144,7 @@ async function runOptimizeView() {
 async function runScoreView() {
   printHeader();
   const bar = new TopBar();
-  bar.start("Computing burrow score…");
+  bar.start("Computing burrowed score…");
   const score = await computeScore();
   cacheScore(score);
   appendScore(score);
@@ -411,7 +410,7 @@ async function runQuarantine() {
 async function runSchedule() {
   printHeader();
   const s = scheduleStatus();
-  console.log(dim("  Schedule — automate burrow via launchd.\n"));
+  console.log(dim("  Schedule — automate burrowed via launchd.\n"));
   console.log(`  Status: ${s.installed ? rgb(palette.moss, "installed") : dim("not installed")}`);
   if (s.installed) console.log(dim(`  plist:  ${s.plistPath}`));
   console.log();

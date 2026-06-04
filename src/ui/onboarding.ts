@@ -39,7 +39,7 @@ function renderInstructions(status: PermissionStatus) {
   const w = Math.min(72, termWidth() - 4);
   console.log();
   console.log(boxTop(w));
-  console.log(boxLine(brand("🔐  burrow needs Full Disk Access"), w));
+  console.log(boxLine(brand("🔐  burrowed needs Full Disk Access"), w));
   console.log(boxLine("", w));
   console.log(
     boxLine(
@@ -63,10 +63,10 @@ function renderInstructions(status: PermissionStatus) {
   console.log(boxLine("  1. Open System Settings → Privacy & Security", w));
   console.log(boxLine("  2. Choose 'Full Disk Access'", w));
   console.log(boxLine("  3. Add your terminal app (Terminal / iTerm / Ghostty)", w));
-  console.log(boxLine("  4. Restart your terminal and re-run burrow", w));
+  console.log(boxLine("  4. Restart your terminal and re-run burrowed", w));
   console.log(boxLine("", w));
   console.log(
-    boxLine(dim("(burrow is read-only until you confirm a deletion.)"), w),
+    boxLine(dim("(burrowed is read-only until you confirm a deletion.)"), w),
   );
   console.log(boxBot(w));
   console.log();

@@ -32,10 +32,10 @@ toolchain caches that you can regenerate any time.
 ## CLI
 
 ```bash
-burrow scan [path]            # interactive
-burrow scan [path] -l         # list only, no prompts
-burrow scan [path] --min 50   # hide items < 50 MB
-burrow clean dev-junk -y .    # auto-clean cwd (safe items only)
+burrowed scan [path]            # interactive
+burrowed scan [path] -l         # list only, no prompts
+burrowed scan [path] --min 50   # hide items < 50 MB
+burrowed clean dev-junk -y .    # auto-clean cwd (safe items only)
 ```
 
 ## Safety

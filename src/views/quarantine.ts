@@ -1,6 +1,6 @@
 /**
  * Quarantine views — listBatches / restore / purge — bound up in
- * `burrow restore` and `burrow purge-quarantine` and a Dashboard entry.
+ * `burrowed restore` and `burrowed purge-quarantine` and a Dashboard entry.
  */
 import pc from "picocolors";
 import { listBatches, restoreBatch, purge } from "../core/quarantine.ts";

@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
- * Cross-compile burrow into single-file binaries for darwin-arm64 and
- * darwin-x64. Output: dist/burrow-darwin-arm64, dist/burrow-darwin-x64.
+ * Cross-compile burrowed into single-file binaries for darwin-arm64 and
+ * darwin-x64. Output: dist/burrowed-darwin-arm64, dist/burrowed-darwin-x64.
  *
  * Used by .github/workflows/release.yml.
  */
@@ -17,7 +17,7 @@ mkdirSync(OUT_DIR, { recursive: true });
 let failed = 0;
 for (const t of TARGETS) {
   const suffix = t.replace(/^bun-/, "");
-  const outfile = join(OUT_DIR, `burrow-${suffix}`);
+  const outfile = join(OUT_DIR, `burrowed-${suffix}`);
   console.log(`▸ building ${outfile} …`);
   const p = Bun.spawnSync(
     [

@@ -14,10 +14,10 @@ allowlist + denylist:
 ## CLI
 
 ```bash
-burrow clean system-caches        # interactive
-burrow clean system-caches -l     # list only
-burrow clean system-caches -n     # dry-run
-burrow clean system-caches -y     # auto-clean allowlisted ones
+burrowed clean system-caches        # interactive
+burrowed clean system-caches -l     # list only
+burrowed clean system-caches -n     # dry-run
+burrowed clean system-caches -y     # auto-clean allowlisted ones
 ```
 
 ## Safety

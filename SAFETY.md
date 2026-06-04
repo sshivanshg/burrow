@@ -1,6 +1,6 @@
 # Safety guarantees
 
-`burrow` is in the business of `rm -rf`-ing parts of your computer.
+`burrowed` is in the business of `rm -rf`-ing parts of your computer.
 The whole point is to do that **safely**, every time. This document
 spells out every guardrail.
 
@@ -15,7 +15,7 @@ In `src/core/safety.ts`, `passesCommonGuards(path, scope)` enforces:
 - `path` does not start with `/System`, `/Library/Apple`, `/private/var/db`,
   `/usr/bin`, `/usr/sbin`, `/bin`, `/sbin`, `/etc`.
 - `path` is **under** the cleaner's declared scope (an absolute prefix check).
-- `path` is **not a symlink** (`lstat` check). `burrow` never follows symlinks.
+- `path` is **not a symlink** (`lstat` check). `burrowed` never follows symlinks.
 
 If any of these fails, `isSafeToDelete()` returns `false` and the cleaner
 silently refuses to delete that path. There is no flag that disables these.
@@ -67,10 +67,10 @@ registered cleaner — they all have to refuse `/`, `$HOME`, `/etc`,
 `/System`, `/usr/bin/env`, `/etc/passwd`. New cleaners must pass this
 test or CI fails.
 
-`burrow.test.ts` covers the size + walk + safety primitives end-to-end.
+`burrowed.test.ts` covers the size + walk + safety primitives end-to-end.
 
 ## Reporting a safety bug
 
-If you find a path `burrow` deletes that it shouldn't, open an issue
+If you find a path `burrowed` deletes that it shouldn't, open an issue
 with the exact command, your macOS version, and the path — that's a
 priority-zero bug.

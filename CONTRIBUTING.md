@@ -1,14 +1,14 @@
-# Contributing to burrow
+# Contributing to burrowed
 
-Thanks for digging in. burrow is a Mac cleaning tool that has to delete
-files on people's actual computers — so the bar for new code is high:
-**safety first, speed second, polish third.**
+Thanks for digging in. burrowed is a Mac cleaning tool that has to
+delete files on people's actual computers — so the bar for new code is
+high: **safety first, speed second, polish third.**
 
 ## Setup
 
 ```bash
-git clone https://github.com/sshivanshg/burrow
-cd burrow
+git clone https://github.com/sshivanshg/burrowed
+cd burrowed
 bun install
 bun test
 bun run index.ts ~/Projects -l   # sanity check
@@ -46,10 +46,11 @@ If your cleaner shells out (`brew`, `docker`, `xcrun`), it must
 
 ## Animations
 
-Animations live in `src/ui/animations.ts`. They must:
+Animations live in `src/ui/animations.ts`, `src/ui/digger.ts`, and
+`src/ui/topbar.ts`. They must:
 
 - Detect TTY and degrade to plain output when piped.
-- Respect `--no-animation` and `NO_COLOR` / `BURROW_NO_ANIMATION`.
+- Respect `--no-animation` and `NO_COLOR` / `BURROWED_NO_ANIMATION`.
 - Never block deletion; if the animation throws, the cleaner keeps going.
 
 ## Commits
@@ -59,5 +60,14 @@ Plain, real commit messages. Short subject, optional body explaining
 
 ## Releases
 
-Tag `vX.Y.Z`, push the tag. CI builds binaries and attaches them to the
-GitHub release.
+Use the release script:
+
+```bash
+bun run release patch        # 0.x.y → 0.x.(y+1)
+bun run release minor        # 0.x.y → 0.(x+1).0
+bun run release major        # 0.x.y → (x+1).0.0
+```
+
+It bumps `package.json` + `Formula/burrowed.rb` + `BURROWED_VERSION`
+in `src/cli.ts`, commits, tags, pushes. CI does the rest (build,
+publish release, auto-commit Formula SHA update back to main).
