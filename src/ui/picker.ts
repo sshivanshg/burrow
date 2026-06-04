@@ -13,6 +13,8 @@ import { Digger } from "./digger.ts";
 import { brand, freed as freedColor, sky, dim } from "./theme.ts";
 import { quarantineBatch } from "../core/quarantine.ts";
 import { record as recordHistory } from "../core/history.ts";
+import { cloudStatus } from "../core/cloud.ts";
+import { rgb, palette } from "./theme.ts";
 
 interface RunOpts {
   cleaner: Cleaner;
@@ -33,7 +35,22 @@ export async function runCleaner(opts: RunOpts) {
 
   const sp = new Digger();
   sp.start(`Digging through ${cleaner.meta.title}…`);
-  const findings = await cleaner.scan(scanOpts);
+  const rawFindings = await cleaner.scan(scanOpts);
+  // Annotate cloud-relevant findings — only for cleaners that can surface
+  // user-visible files (large-files, duplicates, downloads, mail-attachments).
+  const cloudAware = new Set(["large-files", "duplicates", "downloads", "mail-attachments"]);
+  const findings = cloudAware.has(cleaner.meta.id)
+    ? rawFindings.map((f) => {
+        const status = cloudStatus(f.path);
+        if (status === "evicted") {
+          return { ...f, safe: false, description: `${f.description ?? ""} · ${rgb(palette.sky, "iCloud-evicted")}`.trim() };
+        }
+        if (status === "in-sync-folder") {
+          return { ...f, safe: false, description: `${f.description ?? ""} · ${rgb(palette.sky, "in sync folder")}`.trim() };
+        }
+        return f;
+      })
+    : rawFindings;
   sp.stop(`Found ${pc.bold(String(findings.length))} ${cleaner.meta.id} item(s).`);
 
   if (findings.length === 0) {

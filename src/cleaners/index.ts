@@ -18,6 +18,7 @@ import largeFiles from "./large-files.ts";
 import duplicates from "./duplicates.ts";
 import appLeftovers from "./app-leftovers.ts";
 import mailAttachments from "./mail-attachments.ts";
+import dormantApps from "./dormant-apps.ts";
 import type { Cleaner } from "../core/types.ts";
 
 export const cleaners: Cleaner[] = [
@@ -34,6 +35,7 @@ export const cleaners: Cleaner[] = [
   logs,
   mailAttachments,
   appLeftovers,
+  dormantApps,
 ];
 
 export function byId(id: string): Cleaner | undefined {

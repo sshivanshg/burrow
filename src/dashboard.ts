@@ -28,10 +28,16 @@ import duplicates from "./cleaners/duplicates.ts";
 import { renderStats, renderHistory } from "./views/stats.ts";
 import { listQuarantine, restoreById, purgeAll } from "./views/quarantine.ts";
 import { status as scheduleStatus, install as installSchedule, uninstall as uninstallSchedule, type Cadence } from "./core/schedule.ts";
+import { runOptimize } from "./views/optimize.ts";
+import { rgb } from "./ui/theme.ts";
+import { buildScans, recommend } from "./core/recommendations.ts";
+import { renderCards } from "./ui/cards.ts";
+import dormantApps from "./cleaners/dormant-apps.ts";
 
 const MAIN_MENU: MenuItem[] = [
   { value: "clean", label: "Clean", description: "Free up disk space" },
-  { value: "uninstall", label: "Uninstall", description: "Remove apps completely" },
+  { value: "uninstall", label: "Uninstall", description: "Remove apps · dormant detection" },
+  { value: "optimize", label: "Optimize", description: "Privileged tune-ups (TouchID)" },
   { value: "analyze", label: "Analyze", description: "Explore disk usage" },
   { value: "status", label: "Status", description: "Monitor system health" },
   { value: "stats", label: "Stats", description: "Lifetime reclaimed + history" },
@@ -90,18 +96,44 @@ async function runClean() {
 
 async function runUninstall() {
   printHeader();
-  console.log(dim("  Uninstall — type an app name to hunt its leftover files.\n"));
-  const app = await readLine("  App name (e.g. Slack): ");
-  if (!app) return;
-  console.log();
-  await runCleaner({
-    cleaner: appLeftovers,
-    scanOpts: { appName: app },
-    dryRun: false,
-    json: false,
-    list: false,
-    yes: false,
+  console.log(dim("  Uninstall — remove apps and their leftover files.\n"));
+  const pick = await showMenu({
+    items: [
+      { value: "by-name", label: "By name", description: "Type an app name to find its leftovers" },
+      { value: "dormant", label: "Dormant apps", description: "Apps you haven't opened in 90+ days" },
+      { value: "back", label: "Back", description: "Return to main menu" },
+    ],
   });
+  if (!pick || pick === "back") return;
+  if (pick === "by-name") {
+    const app = await readLine("  App name (e.g. Slack): ");
+    if (!app) return;
+    console.log();
+    await runCleaner({
+      cleaner: appLeftovers,
+      scanOpts: { appName: app },
+      dryRun: false,
+      json: false,
+      list: false,
+      yes: false,
+    });
+  } else if (pick === "dormant") {
+    console.log();
+    await runCleaner({
+      cleaner: dormantApps,
+      scanOpts: { olderThanDays: 90 },
+      dryRun: false,
+      json: false,
+      list: false,
+      yes: false,
+    });
+  }
+  await pressAnyKey();
+}
+
+async function runOptimizeView() {
+  printHeader();
+  await runOptimize();
   await pressAnyKey();
 }
 
@@ -227,10 +259,47 @@ async function readLine(prompt: string): Promise<string> {
   });
 }
 
+/**
+ * Run a quick, cheap scan of just the auto-scanning cleaners so we can
+ * compute recommendation cards. Skipped when stdout isn't a TTY.
+ */
+async function quickScanForRecs() {
+  if (!animationsEnabled()) return [] as Awaited<ReturnType<typeof buildScans>>;
+  const cheap = cleaners.filter(
+    (c) => !["app-leftovers", "large-files", "duplicates", "dormant-apps"].includes(c.meta.id),
+  );
+  const dg = new Digger();
+  dg.start("Sniffing around for quick wins…");
+  const rows: Array<{ id: string; title: string; findings: Finding[] }> = [];
+  for (let i = 0; i < cheap.length; i++) {
+    const c = cheap[i];
+    dg.setProgress((i + 1) / cheap.length);
+    dg.setMessage(`Sampling ${c.meta.title}…`);
+    try {
+      const ok = await Promise.resolve(c.meta.available?.() ?? true);
+      if (!ok) continue;
+      const findings = await c.scan({});
+      if (findings.length > 0) rows.push({ id: c.meta.id, title: c.meta.title, findings });
+    } catch {
+      // ignore
+    }
+  }
+  dg.stop("Done sniffing.");
+  return buildScans(rows);
+}
+
 export async function runDashboard() {
   await ensurePermissions();
+  let recs: ReturnType<typeof recommend> = [];
+  let firstRun = true;
   while (true) {
     printHeader();
+    if (firstRun) {
+      const scans = await quickScanForRecs();
+      recs = recommend(scans);
+      firstRun = false;
+    }
+    renderCards(recs);
     const choice = await showMenu({ items: MAIN_MENU });
     if (!choice) {
       console.log(dim("\n  bye 🐹\n"));
@@ -238,6 +307,7 @@ export async function runDashboard() {
     }
     if (choice === "clean") await runClean();
     else if (choice === "uninstall") await runUninstall();
+    else if (choice === "optimize") await runOptimizeView();
     else if (choice === "analyze") await runAnalyze();
     else if (choice === "status") await runStatus();
     else if (choice === "stats") await runStats();
