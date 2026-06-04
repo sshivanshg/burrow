@@ -1,0 +1,21 @@
+node_modules/
+dist/
+build/
+out/
+.DS_Store
+
+# Compiled binary
+/burrow
+
+# Test scratch
+/tmp/
+*.tmp
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Env / secrets
+.env
+.env.local

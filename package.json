@@ -1,0 +1,15 @@
+{
+  "name": "burrow",
+  "version": "0.1.0",
+  "description": "🐹 Dig out dev junk and reclaim disk space — a tiny Mole-inspired cleaner",
+  "type": "module",
+  "bin": { "burrow": "./index.ts" },
+  "scripts": {
+    "start": "bun run index.ts",
+    "compile": "bun build --compile --minify --outfile burrow index.ts"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.7.0",
+    "picocolors": "^1.0.0"
+  }
+}
