@@ -36,9 +36,23 @@ formula = formula.replace(
   `$1${x64}$2`,
 );
 
-if (formula === before) {
-  console.error("Formula was not modified — patterns probably stopped matching.");
+// Sanity check: the formula must contain the version + sha256 lines we
+// were supposed to patch. Missing them = the formula structure changed
+// out from under us, and we should scream loudly.
+const hasVersion = /version "([^"]+)"/.test(formula);
+const shaCount = (formula.match(/sha256 "[a-f0-9]{64}"/g) ?? []).length;
+if (!hasVersion || shaCount < 2) {
+  console.error("Formula is missing expected version or sha256 declarations.");
+  console.error("(Expected: 1 version line + at least 2 sha256 lines.)");
   process.exit(1);
+}
+
+if (formula === before) {
+  // Patterns matched, but values already correct. Idempotent — totally fine.
+  // Happens when the binary is byte-identical to the previous release
+  // (e.g., a no-op version bump).
+  console.log(`✓ Formula already at version ${version} with matching SHAs — nothing to update.`);
+  process.exit(0);
 }
 
 writeFileSync(formulaFile, formula);
