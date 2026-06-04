@@ -33,13 +33,16 @@ import { rgb } from "./ui/theme.ts";
 import { buildScans, recommend } from "./core/recommendations.ts";
 import { renderCards } from "./ui/cards.ts";
 import dormantApps from "./cleaners/dormant-apps.ts";
+import { computeScore, readCachedScore, cacheScore } from "./core/score.ts";
+import { renderScoreCard, inlineBadge, nudge } from "./views/score.ts";
 
 const MAIN_MENU: MenuItem[] = [
   { value: "clean", label: "Clean", description: "Free up disk space" },
   { value: "uninstall", label: "Uninstall", description: "Remove apps · dormant detection" },
   { value: "optimize", label: "Optimize", description: "Privileged tune-ups (TouchID)" },
   { value: "analyze", label: "Analyze", description: "Explore disk usage" },
-  { value: "status", label: "Status", description: "Monitor system health" },
+  { value: "score", label: "Score", description: "Composite 0-100 health score" },
+  { value: "status", label: "Status", description: "Disk overview + reclaimable" },
   { value: "stats", label: "Stats", description: "Lifetime reclaimed + history" },
   { value: "quarantine", label: "Quarantine", description: "Soft-deleted items · restore / purge" },
   { value: "schedule", label: "Schedule", description: "Automate cleanups via launchd" },
@@ -134,6 +137,20 @@ async function runUninstall() {
 async function runOptimizeView() {
   printHeader();
   await runOptimize();
+  await pressAnyKey();
+}
+
+async function runScoreView() {
+  printHeader();
+  const dg = new Digger();
+  dg.start("Computing burrow score…");
+  const score = await computeScore();
+  cacheScore(score);
+  dg.stop("Score ready.");
+  console.log();
+  renderScoreCard(score);
+  console.log();
+  console.log("  " + nudge(score));
   await pressAnyKey();
 }
 
@@ -297,7 +314,25 @@ export async function runDashboard() {
     if (firstRun) {
       const scans = await quickScanForRecs();
       recs = recommend(scans);
+      // Compute score off the same scan data + a quick dormant count so the
+      // dashboard doesn't trigger a separate Spotlight pass.
+      const reclaimableBytes = scans.reduce((s, c) => s + c.size, 0);
+      try {
+        const dormantList = await dormantApps.scan({ olderThanDays: 90 });
+        const fresh = await computeScore({
+          reclaimableBytes,
+          dormantCount: dormantList.length,
+        });
+        cacheScore(fresh);
+      } catch {
+        // ignore — badge falls back to cached or hidden
+      }
       firstRun = false;
+    }
+    const cachedScore = readCachedScore();
+    if (cachedScore) {
+      console.log(`  ${dim("score")}  ${inlineBadge(cachedScore)}`);
+      console.log();
     }
     renderCards(recs);
     const choice = await showMenu({ items: MAIN_MENU });
@@ -309,6 +344,7 @@ export async function runDashboard() {
     else if (choice === "uninstall") await runUninstall();
     else if (choice === "optimize") await runOptimizeView();
     else if (choice === "analyze") await runAnalyze();
+    else if (choice === "score") await runScoreView();
     else if (choice === "status") await runStatus();
     else if (choice === "stats") await runStats();
     else if (choice === "quarantine") await runQuarantine();

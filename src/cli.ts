@@ -58,7 +58,7 @@ interface Flags {
 const KNOWN_COMMANDS = new Set([
   "scan", "clean", "uninstall", "dashboard", "doctor",
   "stats", "history", "restore", "purge-quarantine",
-  "watch", "schedule", "unschedule",
+  "watch", "schedule", "unschedule", "score",
 ]);
 
 export function parseArgs(argv: string[]): Flags {
@@ -116,6 +116,7 @@ ${pc.bold("USAGE")}
   burrow dashboard                Same as \`burrow\` with no args
   burrow doctor                   Sanity-check cleaner availability
 
+  burrow score                    Composite 0-100 health score
   burrow stats                    Lifetime reclaimed + sparkline
   burrow history                  Last 20 cleans
   burrow restore [id|--all]       Restore quarantined items
@@ -262,6 +263,23 @@ export async function main(argv: string[]) {
     }
     console.log();
     console.log(dim("  ✓ available · ○ skipped (tool not installed or path missing)"));
+    return;
+  }
+
+  if (flags.command === "score") {
+    const { computeScore, cacheScore } = await import("./core/score.ts");
+    const { renderScoreCard, nudge } = await import("./views/score.ts");
+    const score = await computeScore();
+    cacheScore(score);
+    if (flags.json) {
+      console.log(JSON.stringify(score, null, 2));
+      return;
+    }
+    console.log();
+    renderScoreCard(score);
+    console.log();
+    console.log("  " + nudge(score));
+    console.log();
     return;
   }
 
