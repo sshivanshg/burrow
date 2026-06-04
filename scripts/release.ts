@@ -81,10 +81,16 @@ pkg.version = next;
 writeFileSync("package.json", JSON.stringify(pkg, null, 2) + "\n");
 
 let formula = readFileSync("Formula/burrow.rb", "utf8");
-const before = formula;
+const beforeFormula = formula;
 formula = formula.replace(/version "[^"]+"/, `version "${next}"`);
-if (formula === before) die("could not patch version in Formula/burrow.rb");
+if (formula === beforeFormula) die("could not patch version in Formula/burrow.rb");
 writeFileSync("Formula/burrow.rb", formula);
+
+let cli = readFileSync("src/cli.ts", "utf8");
+const beforeCli = cli;
+cli = cli.replace(/BURROW_VERSION = "[^"]+"/, `BURROW_VERSION = "${next}"`);
+if (cli === beforeCli) die("could not patch BURROW_VERSION in src/cli.ts");
+writeFileSync("src/cli.ts", cli);
 
 if (dryRun) {
   console.log("─ dry run — not committing, tagging, or pushing ─");

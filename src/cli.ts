@@ -35,12 +35,16 @@ import { listBatches } from "./core/quarantine.ts";
 import { watch as runWatch } from "./core/watch.ts";
 import { install as installSchedule, uninstall as uninstallSchedule, status as scheduleStatus, type Cadence } from "./core/schedule.ts";
 
+/** Burned in at build time. Bump via `bun run release patch|minor|major`. */
+export const BURROW_VERSION = "0.2.3";
+
 interface Flags {
   command: string;
   positional: string[];
   dryRun: boolean;
   list: boolean;
   help: boolean;
+  version: boolean;
   json: boolean;
   yes: boolean;
   quiet: boolean;
@@ -68,6 +72,7 @@ export function parseArgs(argv: string[]): Flags {
     dryRun: false,
     list: false,
     help: false,
+    version: false,
     json: false,
     yes: false,
     quiet: false,
@@ -85,6 +90,7 @@ export function parseArgs(argv: string[]): Flags {
     if (a === "--dry-run" || a === "-n") f.dryRun = true;
     else if (a === "--list" || a === "-l") f.list = true;
     else if (a === "--help" || a === "-h") f.help = true;
+    else if (a === "--version" || a === "-V") f.version = true;
     else if (a === "--json") f.json = true;
     else if (a === "--yes" || a === "-y") f.yes = true;
     else if (a === "--quiet" || a === "-q") f.quiet = true;
@@ -127,6 +133,8 @@ ${pc.bold("USAGE")}
   burrow unschedule
 
 ${pc.bold("OPTIONS")}
+  -h, --help           Show this help
+  -V, --version        Print version and exit
   -l, --list           Print findings and exit (no prompts)
   -n, --dry-run        Walk the picker but never delete
   -y, --yes            Skip confirmations (only with \`clean <category>\`)
@@ -140,7 +148,6 @@ ${pc.bold("OPTIONS")}
       --threshold <%>  Disk-fill % at which \`watch\` notifies (default 85)
       --interval <s>   \`watch\` poll interval in seconds (default 60)
       --categories <l> Comma-separated list of categories for \`schedule\`
-  -h, --help           Show this help
 
 ${pc.bold("EXAMPLES")}
   burrow                              ${pc.dim("# dashboard")}
@@ -164,6 +171,11 @@ export async function main(argv: string[]) {
 
   if (flags.help) {
     printHelp();
+    return;
+  }
+
+  if (flags.version) {
+    console.log(`burrow ${BURROW_VERSION}`);
     return;
   }
 
