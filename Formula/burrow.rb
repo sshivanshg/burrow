@@ -16,10 +16,10 @@ class Burrow < Formula
   on_macos do
     if Hardware::CPU.arm?
       url "https://github.com/sshivanshg/burrow/releases/download/v#{version}/burrow-darwin-arm64"
-      sha256 "4d6da0d82bfde783616407912de412008e23ec977657288055ce6d0c225891c5"
+      sha256 "b737674bc85e96162444e606a3e75ec9a2f743bf1149e16345dad1b56f9251db"
     else
       url "https://github.com/sshivanshg/burrow/releases/download/v#{version}/burrow-darwin-x64"
-      sha256 "d26e116a4df06578c2ebbc2ff7b789ca03668bd4c597b43689ea77ffe03688d0"
+      sha256 "384c8e934f000a54e6abbefc457c574f1e2350b2fc0622f8f5bd19ad47cc2d84"
     end
   end
 
