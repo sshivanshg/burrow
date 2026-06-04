@@ -8,7 +8,8 @@ import { multiselect, confirm, note, isCancel, cancel } from "@clack/prompts";
 import { relative } from "node:path";
 import type { Cleaner, CleanOpts, Finding, ScanOpts } from "../core/types.ts";
 import { human } from "../core/size.ts";
-import { moleSpinner, animateBytes, particleBurst } from "./animations.ts";
+import { animateBytes, particleBurst } from "./animations.ts";
+import { Digger } from "./digger.ts";
 import { brand, freed as freedColor, sky, dim } from "./theme.ts";
 
 interface RunOpts {
@@ -26,8 +27,8 @@ export async function runCleaner(opts: RunOpts) {
   const { cleaner, scanOpts, displayRoot } = opts;
   const root = displayRoot ?? scanOpts.root ?? "/";
 
-  const sp = moleSpinner();
-  sp.start(`Scanning ${cleaner.meta.title}…`);
+  const sp = new Digger();
+  sp.start(`Digging through ${cleaner.meta.title}…`);
   const findings = await cleaner.scan(scanOpts);
   sp.stop(`Found ${pc.bold(String(findings.length))} ${cleaner.meta.id} item(s).`);
 
@@ -99,7 +100,7 @@ export async function runCleaner(opts: RunOpts) {
     }
   }
 
-  const del = moleSpinner();
+  const del = new Digger();
   del.start("Filling in the burrow…");
   const cleanOpts: CleanOpts & ScanOpts = {
     ...scanOpts,
