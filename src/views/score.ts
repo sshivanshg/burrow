@@ -77,7 +77,7 @@ export function renderScoreCard(score: HealthScore) {
 /** Compact one-liner used inside the dashboard header. */
 export function inlineBadge(score: HealthScore): string {
   const color = gradeColor(score.grade);
-  return rgb(color, `${score.total} ${score.grade}`) + dim(`/100`);
+  return rgb(color, `${score.total} ${score.grade}`) + dim(` /100`);
 }
 
 /**
