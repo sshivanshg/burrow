@@ -1,0 +1,140 @@
+/**
+ * Generic interactive picker for ANY cleaner's findings. Used by
+ * `burrow clean <category>`, `burrow uninstall <app>`, and the
+ * dashboard drill-in.
+ */
+import pc from "picocolors";
+import { multiselect, confirm, note, isCancel, cancel } from "@clack/prompts";
+import { relative } from "node:path";
+import type { Cleaner, CleanOpts, Finding, ScanOpts } from "../core/types.ts";
+import { human } from "../core/size.ts";
+import { moleSpinner, animateBytes, particleBurst } from "./animations.ts";
+import { brand, freed as freedColor, sky, dim } from "./theme.ts";
+
+interface RunOpts {
+  cleaner: Cleaner;
+  scanOpts: ScanOpts & { appName?: string };
+  dryRun: boolean;
+  json: boolean;
+  list: boolean;
+  yes: boolean;
+  /** Used to render relative paths nicely. */
+  displayRoot?: string;
+}
+
+export async function runCleaner(opts: RunOpts) {
+  const { cleaner, scanOpts, displayRoot } = opts;
+  const root = displayRoot ?? scanOpts.root ?? "/";
+
+  const sp = moleSpinner();
+  sp.start(`Scanning ${cleaner.meta.title}…`);
+  const findings = await cleaner.scan(scanOpts);
+  sp.stop(`Found ${pc.bold(String(findings.length))} ${cleaner.meta.id} item(s).`);
+
+  if (findings.length === 0) {
+    if (opts.json) console.log(JSON.stringify({ cleaner: cleaner.meta.id, findings: [], total: 0 }));
+    else note("Nothing to dig up here.", "✨");
+    return { ran: false, removed: 0, freed: 0, failed: 0 };
+  }
+
+  const total = findings.reduce((s, f) => s + f.size, 0);
+  if (opts.json) {
+    console.log(JSON.stringify({ cleaner: cleaner.meta.id, findings, total }, null, 2));
+    return { ran: false, removed: 0, freed: 0, failed: 0 };
+  }
+
+  note(`${pc.bold(human(total))} reclaimable across ${findings.length} item(s)`, "💾 Potential savings");
+
+  if (opts.list) {
+    renderList(findings, root);
+    return { ran: false, removed: 0, freed: 0, failed: 0 };
+  }
+
+  let selected: Finding[];
+  if (opts.yes) {
+    selected = findings.filter((f) => cleaner.isSafeToDelete(f.path, scanOpts));
+  } else {
+    const longest = Math.max(...findings.map((f) => human(f.size).length));
+    const picked = await multiselect({
+      message: "Select what to delete (space toggles, enter confirms):",
+      options: findings.map((f) => ({
+        value: f.path,
+        label: `${pc.yellow(human(f.size).padStart(longest))}  ${pc.bold(f.label)} ${dim(shortPath(f.path, root))}`,
+        hint: f.description,
+      })),
+      initialValues: findings.filter((f) => f.safe).map((f) => f.path),
+      required: false,
+    });
+    if (isCancel(picked)) {
+      cancel("Cancelled — nothing deleted.");
+      return { ran: false, removed: 0, freed: 0, failed: 0 };
+    }
+    selected = findings.filter(
+      (f) => (picked as string[]).includes(f.path) && cleaner.isSafeToDelete(f.path, scanOpts),
+    );
+  }
+  if (selected.length === 0) {
+    note("Nothing selected — exiting.", dim("·"));
+    return { ran: false, removed: 0, freed: 0, failed: 0 };
+  }
+
+  const freeing = selected.reduce((s, f) => s + f.size, 0);
+
+  if (opts.dryRun) {
+    note(
+      selected.map((f) => `${dim("would remove")} ${shortPath(f.path, root)}`).join("\n"),
+      `🧪 Dry run — ${human(freeing)} would be freed`,
+    );
+    return { ran: true, removed: selected.length, freed: 0, failed: 0 };
+  }
+
+  if (!opts.yes) {
+    const go = await confirm({
+      message: `Delete ${pc.bold(String(selected.length))} item(s) and reclaim ${pc.green(human(freeing))}?`,
+      initialValue: false,
+    });
+    if (isCancel(go) || !go) {
+      cancel("Cancelled — nothing deleted.");
+      return { ran: false, removed: 0, freed: 0, failed: 0 };
+    }
+  }
+
+  const del = moleSpinner();
+  del.start("Filling in the burrow…");
+  const cleanOpts: CleanOpts & ScanOpts = {
+    ...scanOpts,
+    dryRun: false,
+    onProgress: (n, t, freed) => del.setMessage(`Removed ${n}/${t} — ${human(freed)} freed`),
+  };
+  const result = await cleaner.clean(selected, cleanOpts);
+  del.stop(`Removed ${result.removed} item(s).`);
+
+  await animateBytes({
+    to: result.freed,
+    ms: 700,
+    render: (_, str) => process.stdout.write("\r  " + freedColor(`Reclaimed ${str}`) + "        "),
+  });
+  process.stdout.write("\n");
+  if (result.freed > 1024 * 1024) {
+    await particleBurst({ width: Math.min(60, process.stdout.columns ?? 60), height: 3, count: 24, ms: 500 });
+  }
+
+  return { ran: true, removed: result.removed, freed: result.freed, failed: result.failed };
+}
+
+function renderList(findings: Finding[], root: string) {
+  const longest = Math.max(...findings.map((f) => human(f.size).length));
+  for (const f of findings) {
+    console.log(
+      `${pc.yellow(human(f.size).padStart(longest))}  ${pc.bold(f.label)} ${dim(shortPath(f.path, root))}`,
+    );
+  }
+}
+
+function shortPath(p: string, root: string): string {
+  try {
+    const rel = relative(root, p);
+    if (rel && !rel.startsWith("..")) return rel || ".";
+  } catch {}
+  return p;
+}
