@@ -36,7 +36,7 @@ import { watch as runWatch } from "./core/watch.ts";
 import { install as installSchedule, uninstall as uninstallSchedule, status as scheduleStatus, type Cadence } from "./core/schedule.ts";
 
 /** Burned in at build time. Bump via `bun run release patch|minor|major`. */
-export const BURROW_VERSION = "0.2.4";
+export const BURROW_VERSION = "0.2.5";
 
 interface Flags {
   command: string;

@@ -10,7 +10,7 @@
 class Burrow < Formula
   desc "Dig out junk and reclaim disk space — Mac cleaner with terminal animations"
   homepage "https://github.com/sshivanshg/burrow"
-  version "0.2.4"
+  version "0.2.5"
   license "MIT"
 
   on_macos do
