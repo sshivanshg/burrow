@@ -175,7 +175,13 @@ export async function main(argv: string[]) {
   }
 
   if (flags.version) {
-    console.log(`burrow ${BURROW_VERSION}`);
+    const arch = process.arch;
+    const platform = process.platform;
+    const runtime = typeof Bun !== "undefined" ? `bun ${Bun.version}` : `node ${process.version}`;
+    console.log(`${brand("burrow")} ${BURROW_VERSION}`);
+    console.log(dim(`  runtime  ${runtime}`));
+    console.log(dim(`  platform ${platform}-${arch}`));
+    console.log(dim(`  source   https://github.com/sshivanshg/burrow`));
     return;
   }
 
