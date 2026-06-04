@@ -29,7 +29,7 @@ jobs:
       - name: Generate checksums
         run: |
           cd dist
-          shasum -a 256 burrow-* > SHA256SUMS
+          shasum -a 256 burrowed-* > SHA256SUMS
           cat SHA256SUMS
 
       - name: Create GitHub release

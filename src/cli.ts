@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 /**
- * burrow CLI entry. Routes subcommands to handlers.
+ * burrowed CLI entry. Routes subcommands to handlers.
  *
- *   burrow                          interactive dashboard
+ *   burrowed                          interactive dashboard
  *   burrowed scan [path]              scan dev-junk under `path` (default cwd)
  *   burrowed clean <category> [path]  pick + clean by category
  *   burrowed uninstall <app>          hunt leftovers for a removed app
@@ -150,7 +150,7 @@ ${pc.bold("OPTIONS")}
       --categories <l> Comma-separated list of categories for \`schedule\`
 
 ${pc.bold("EXAMPLES")}
-  burrow                              ${pc.dim("# dashboard")}
+  burrowed                            ${pc.dim("# dashboard")}
   burrowed scan ~/Projects              ${pc.dim("# scan dev-junk under ~/Projects")}
   burrowed clean dev-junk -y --quarantine   ${pc.dim("# undoable bulk clean")}
   burrowed restore 2026-06-04T17-30-12-123Z_dev-junk
