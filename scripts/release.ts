@@ -97,7 +97,7 @@ if (dryRun) {
 }
 
 // 5. Commit
-run(["git", "add", "package.json", "Formula/burrow.rb"]);
+run(["git", "add", "package.json", "Formula/burrow.rb", "src/cli.ts"]);
 run(["git", "commit", "-m", `Release v${next}`], { inherit: true });
 
 // 6. Tag
