@@ -80,17 +80,15 @@ console.log(`▸ bumping ${current} → ${next}`);
 pkg.version = next;
 writeFileSync("package.json", JSON.stringify(pkg, null, 2) + "\n");
 
-let formula = readFileSync("Formula/burrow.rb", "utf8");
-const beforeFormula = formula;
-formula = formula.replace(/version "[^"]+"/, `version "${next}"`);
-if (formula === beforeFormula) die("could not patch version in Formula/burrow.rb");
-writeFileSync("Formula/burrow.rb", formula);
+function patchInPlace(file: string, pattern: RegExp, replacement: string, errLabel: string) {
+  const before = readFileSync(file, "utf8");
+  if (!pattern.test(before)) die(`could not find ${errLabel} pattern in ${file}`);
+  const after = before.replace(pattern, replacement);
+  writeFileSync(file, after);
+}
 
-let cli = readFileSync("src/cli.ts", "utf8");
-const beforeCli = cli;
-cli = cli.replace(/BURROW_VERSION = "[^"]+"/, `BURROW_VERSION = "${next}"`);
-if (cli === beforeCli) die("could not patch BURROW_VERSION in src/cli.ts");
-writeFileSync("src/cli.ts", cli);
+patchInPlace("Formula/burrow.rb", /version "[^"]+"/, `version "${next}"`, "version");
+patchInPlace("src/cli.ts", /BURROW_VERSION = "[^"]+"/, `BURROW_VERSION = "${next}"`, "BURROW_VERSION");
 
 if (dryRun) {
   console.log("─ dry run — not committing, tagging, or pushing ─");
