@@ -1,6 +1,6 @@
 {
   "name": "burrow",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Dig out junk and reclaim disk space — a Mole-inspired Mac cleaner with terminal animations.",
   "type": "module",
   "license": "MIT",
